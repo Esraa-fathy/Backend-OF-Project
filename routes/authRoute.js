@@ -1,6 +1,7 @@
   const router = require("express").Router();
   const User = require("../models/userModel");
   const checkDuplicateUsernameOrEmail = require("../middlewares/verifySignUp");
+  const verifyIsRequiredFieldsInSignUp = require("../middlewares/verifyIsRequiredFields");
   require('dotenv').config();
 
   var jwt = require("jsonwebtoken");
@@ -8,21 +9,8 @@
   var nodemailer = require("nodemailer");
 
 // Register Function
- router.post("/api/auth/signup",[checkDuplicateUsernameOrEmail] ,(req , res) => {
-   
-  let username = req.body.username;
-  let email = req.body.email;
-  let password = req.body.password;
-  if( (username == ""&&email == "") || (username == ""&&password == "") || (email == ""&&password == "") ){
-    res.json("Fields are required");
-  }else if(username == "" ){
-    res.json("UserName is required");
-  }else if(password == "" ){
-   res.json( "Password is required" );
- }else if(email == "" ){
-  res.json( "email is required" );
-}
-else{
+ router.post("/api/auth/signup",[verifyIsRequiredFieldsInSignUp],[checkDuplicateUsernameOrEmail] ,(req , res) => {
+ 
     const user = new User({
       username: req.body.username,
       email: req.body.email,
@@ -36,7 +24,7 @@ else{
 
     })
     .catch((err) => res.send(err));
-  }
+  
    });
 
 // Login Function 
@@ -44,11 +32,11 @@ else{
    let username = req.body.username;
    let password = req.body.password;
    if(username == "" && password == ""){
-     res.json("Fields are required");
+    return res.status(200).json("Fields are required");
    }else if(username == ""){
-    res.json( "UserName is required" );
+    return res.status(200).json( "UserName is required" );
   }else if(password == ""){
-    res.json( "Password is required" );
+    return res.status(200).json( "Password is required" );
   }
 else{
 
@@ -56,7 +44,7 @@ else{
       .then( user => {
    
         if (!user) {
-           res.status(404).send({ message: "User Not found." });
+          return res.status(200).json({ message: "User Not found." });
         }
         
         var passwordIsValid = bcrypt.compareSync(
@@ -66,7 +54,7 @@ else{
 
       
     if (!passwordIsValid) {
-      res.status(401).send({ message: "Invalid Password!" });
+     return res.status(200).json({ message: "Invalid Password!" });
     }
    
 
@@ -86,7 +74,7 @@ else{
 
        })
   .catch(err => {
-    res.status(500).send(err);
+    res.status(200).json(err);
   });
 }
 });
@@ -95,9 +83,9 @@ else{
 router.post("/api/auth/signout", (req, res) => {
   try {
     req.session = null;
-     res.status(200).send({ message: "You've been log out!" });
+     res.status(200).json({ message: "You've been log out!" });
   } catch (err) {
-    this.next(err);
+    res.status(200).json(err);
   }
 });
 
@@ -112,7 +100,7 @@ const {email} = req.body;
 const oldUser = await User.findOne({email});
 try{
 if(!oldUser){
-  return res.json({ status: "User Not Exists!!" });
+  return res.status(200).json( "User Not Exists!!" );
 }
 
 const secret = process.env.JWT_SECRET+oldUser.password;
@@ -141,13 +129,13 @@ var mailOptions = {
 
 transporter.sendMail(mailOptions, function (error, info) {
   if (error) {
-    console.log('Error in sending email  ' + error);
+    res.status(200).json('Error in sending email  ' + error);
   } else {
     console.log("Email sent: " + info.response);
   }
 });
 
-res.status(200).send("email has been sent successfully to client!");
+res.status(200).json("email has been sent successfully to client!");
 }catch (error) { }
 
 });
@@ -157,7 +145,7 @@ router.get("/reset-password/:id/:token", async(req, res) => {
 const {id,token} = req.params; 
 const oldUser = await User.findOne({_id: id});
 if (!oldUser) {
-  return res.json({ status: "User Not Exists!!" });
+  return res.status(200).json( "User Not Exists!!" );
 }
 const secret = process.env.JWT_SECRET+oldUser.password;
 try{
@@ -165,7 +153,7 @@ const verify = jwt.verify(token,secret);
  res.status(200).json("Verified");
 }catch (error) {
   console.log(error);
-  res.send("Not Verified ");
+  res.status(200).json("Not Verified ");
 }
 
 });
@@ -177,7 +165,7 @@ const {id,token} = req.params;
 const {password} = req.body;
 const oldUser = await User.findOne({_id: id});
 if (!oldUser) {
-  return res.json({ status: "User Not Exists!!" });
+  return  res.status(200).json( "User Not Exists!!" );
 }
 const secret = process.env.JWT_SECRET+oldUser.password;
 try{
@@ -193,10 +181,10 @@ await User.updateOne(
     },
   }
 );
-res.send("Reset password Successfully");
+res.status(200).json("Reset password Successfully");
 } catch (error) {
   console.log(error);
-  res.json({ status: "Something Went Wrong" });
+  res.status(200).json({ status: "Something Went Wrong" });
 }
 
 
