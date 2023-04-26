@@ -42,6 +42,6 @@ app.use(require("./routes/todo"));
 // Server Configurations 
 app.listen(PORT, function (err) {
     if (err) console.log(err);
-    console.log("Server listening on PORT", PORT);
+    console.log("🚀 Server listening on PORT", PORT);
 });
 
