@@ -150,7 +150,8 @@ if (!oldUser) {
 const secret = process.env.JWT_SECRET+oldUser.password;
 try{
 const verify = jwt.verify(token,secret);
- res.status(200).json("Verified");
+res.render("index",{ email: verify.email, status: "Not Verified" })
+
 }catch (error) {
   console.log(error);
   res.status(200).json("Not Verified ");
@@ -181,7 +182,8 @@ await User.updateOne(
     },
   }
 );
-res.status(200).json("Reset password Successfully");
+res.render("index", { email: verify.email, status: "verified" });
+
 } catch (error) {
   console.log(error);
   res.status(200).json({ status: "Something Went Wrong" });

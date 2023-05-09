@@ -24,7 +24,7 @@ db.once('open', () => {
 });
 
 app.use(cors());
-
+app.set("view engine", "ejs");
 
 /**** Middlewares*****/
 
